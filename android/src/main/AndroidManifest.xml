@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  package="com.example.flutter_aliyun_speech_recognizer">
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+</manifest>
