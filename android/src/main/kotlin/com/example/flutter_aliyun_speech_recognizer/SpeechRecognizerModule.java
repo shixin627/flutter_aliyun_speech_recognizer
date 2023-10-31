@@ -41,11 +41,10 @@ public class SpeechRecognizerModule implements INativeNuiCallback {
     }
 
     private void setRecognizedText(String result) {
-        Object obj = (Object) JSONObject.parse(result);
-        JSONObject jsonObject = (JSONObject) obj;
+        JSONObject jsonObject = (JSONObject) JSONObject.parse(result);
         String payloadResult = jsonObject.getJSONObject("payload").getString("result");
         if (callback != null) {
-            Log.i(TAG, "setRecognizedText: " + payloadResult);
+            Log.i(TAG, "setRecognizedText => " + payloadResult);
             callback.setRecognizedText(payloadResult);
         }
     }
@@ -84,12 +83,12 @@ public class SpeechRecognizerModule implements INativeNuiCallback {
         }
     }
 
-    public void startRecognition() {
+    public void startRecognition(String token) {
         setRecognizingState(true);
-        startDialog();
+        startDialog(token);
     }
 
-    private void startDialog() {
+    private void startDialog(String token) {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -100,22 +99,32 @@ public class SpeechRecognizerModule implements INativeNuiCallback {
                 //  initialize()之后startDialog之前调用
                 nui_instance.setParams(genParams());
                 int ret = nui_instance.startDialog(vad_mode,
-                        genDialogParams());
+                        genDialogParams(token));
                 Log.i(TAG, "start done with " + ret);
                 if (ret != 0) {
                     final String msg_text = Utils.getMsgWithErrorCode(ret, "start");
                 }
             }
         });
+//        Constants.VadMode vad_mode = Constants.VadMode.TYPE_P2T;
+//        //设置相关识别参数，具体参考API文档
+//        //  initialize()之后startDialog之前调用
+//        nui_instance.setParams(genParams());
+//        int ret = nui_instance.startDialog(vad_mode,
+//                genDialogParams());
+//        Log.i(TAG, "start done with " + ret);
+//        if (ret != 0) {
+//            final String msg_text = Utils.getMsgWithErrorCode(ret, "start");
+//        }
     }
 
-    private String genDialogParams() {
+    private String genDialogParams(String token) {
         String params = "";
         try {
             JSONObject dialog_param = new JSONObject();
             //运行过程中可以在startDialog时更新参数，尤其是更新过期token
 //            dialog_param.put("app_key", "");
-//            dialog_param.put("token", "");
+            dialog_param.put("token", token);
             params = dialog_param.toString();
         } catch (JSONException e) {
             e.printStackTrace();
@@ -162,7 +171,7 @@ public class SpeechRecognizerModule implements INativeNuiCallback {
         mHandler = new Handler(mHanderThread.getLooper());
 
         Log.i(TAG, "vad mode onCheckedChanged true");
-        vadMode.set(true);
+        vadMode.set(false);
         setRecognizingState(false);
 
         //获取工作路径, 这里获得当前nuisdk.aar中assets路径
@@ -240,24 +249,31 @@ public class SpeechRecognizerModule implements INativeNuiCallback {
         return params;
     }
 
+    private void setToken(String token) {
+        try {
+            JSONObject object = new JSONObject();
+            object.put("token", token);
+            nui_instance.setParams(object.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     private String genInitParams(String workpath, String debugpath) {
         String str = "";
         try {
             //获取token方式：
-
             JSONObject object = new JSONObject();
-
             //账号和项目创建
             //  ak_id ak_secret app_key如何获得,请查看https://help.aliyun.com/document_detail/72138.html
             object.put("app_key", "aXhnERs5FGScnBZa"); // 必填
-
             //方法1：
             //  首先ak_id ak_secret app_key如何获得,请查看https://help.aliyun.com/document_detail/72138.html
             //  然后请看 https://help.aliyun.com/document_detail/466615.html 使用其中方案一获取临时凭证
             //  此方案简介: 远端服务器生成具有有效时限的临时凭证, 下发给移动端进行使用, 保证账号信息ak_id和ak_secret不被泄露
             //  获得Token方法(运行在APP服务端): https://help.aliyun.com/document_detail/450255.html?spm=a2c4g.72153.0.0.79176297EyBj4k
 
-            object.put("token", "2be3bdcb658646f6866090d956463583");  // 必填
+            object.put("token", "fake_39adb3e4b28a61d6c2d0f9cdc41");  // 必填
             //方法2：
             //  STS获取临时凭证方法暂不支持
 
@@ -305,12 +321,12 @@ public class SpeechRecognizerModule implements INativeNuiCallback {
         Log.i(TAG, "event=" + event);
         if (event == Constants.NuiEvent.EVENT_ASR_RESULT) {
             Log.d(TAG, "asrResult=" + asrResult.asrResult);
-            setRecognizedText(asrResult.asrResult);
+//            setRecognizedText(asrResult.asrResult);
             setRecognizingState(false);
         } else if (event == Constants.NuiEvent.EVENT_ASR_PARTIAL_RESULT) {
             setRecognizedText(asrResult.asrResult);
         } else if (event == Constants.NuiEvent.EVENT_ASR_ERROR) {
-            setRecognizedText(asrResult.asrResult);
+//            setRecognizedText(asrResult.asrResult);
             final String msg_text = Utils.getMsgWithErrorCode(resultCode, "start");
             setRecognizingState(false);
         } else if (event == Constants.NuiEvent.EVENT_DIALOG_EX) { /* unused */

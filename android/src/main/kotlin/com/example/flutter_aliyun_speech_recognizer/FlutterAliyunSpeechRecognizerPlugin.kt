@@ -1,5 +1,7 @@
 package com.example.flutter_aliyun_speech_recognizer
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -8,6 +10,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+
 
 /** FlutterAliyunSpeechRecognizerPlugin */
 class FlutterAliyunSpeechRecognizerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
@@ -25,12 +28,13 @@ class FlutterAliyunSpeechRecognizerPlugin : FlutterPlugin, ActivityAware, Method
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             "start" -> {
-                Log.d(debugTag, "start")
-                startRecognition()
+//                Log.d(debugTag, "user want to start")
+                val token = call.argument<String>("token")
+                startRecognition(token)
             }
 
             "stop" -> {
-                Log.d(debugTag, "stop")
+//                Log.d(debugTag, "user want to stop")
                 stopRecognition()
             }
 
@@ -44,24 +48,27 @@ class FlutterAliyunSpeechRecognizerPlugin : FlutterPlugin, ActivityAware, Method
         channel.setMethodCallHandler(null)
     }
 
-    private fun startRecognition() {
+    private fun startRecognition(token: String? = null) {
+        if (token == null) {
+            Log.d(debugTag, "token is null")
+            return
+        }
         checkAudioPermission()
-        speechRecognizer.startRecognition()
+        speechRecognizer.startRecognition(token)
     }
 
     private fun stopRecognition() {
         speechRecognizer.stopRecognition()
     }
 
+    private val uiThreadHandler: Handler = Handler(Looper.getMainLooper())
     private var recognizerCallback: SpeechRecognizerCallback = object : SpeechRecognizerCallback {
         override fun setRecognizingState(state: Boolean) {
-            // Handle the recognizing state change
-            channel.invokeMethod("setRecognizingState", state)
+            uiThreadHandler.post(Runnable { channel.invokeMethod("setRecognizingState", state) })
         }
 
         override fun setRecognizedText(text: String) {
-            // Handle the recognized text
-            channel.invokeMethod("setRecognizedText", text)
+            uiThreadHandler.post(Runnable { channel.invokeMethod("setRecognizedText", text) })
         }
     }
 

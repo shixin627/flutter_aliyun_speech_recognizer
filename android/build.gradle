@@ -23,6 +23,7 @@ allprojects {
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+apply from: './aar_tools.gradle'
 
 android {
     if (project.android.hasProperty("namespace")) {
@@ -54,7 +55,7 @@ android {
         testImplementation 'org.jetbrains.kotlin:kotlin-test'
         testImplementation 'org.mockito:mockito-core:5.0.0'
         implementation files('libs/fastjson-1.1.46.android.jar')
-        implementation files ('libs/nuisdk-release.aar')
+//        implementation files ('libs/nuisdk-release.aar')
     }
 
     testOptions {
@@ -68,4 +69,7 @@ android {
             }
         }
     }
+}
+dependencies {
+    compileOnly fileTree(includes: ["*.aar"], dir:"libs")
 }

@@ -23,7 +23,7 @@ abstract class FlutterAliyunSpeechRecognizerPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<void> start() {
+  Future<void> start(String token) {
     throw UnimplementedError('start() has not been implemented.');
   }
 

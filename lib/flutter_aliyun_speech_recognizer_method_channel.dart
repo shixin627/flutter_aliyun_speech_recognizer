@@ -36,8 +36,8 @@ class MethodChannelFlutterAliyunSpeechRecognizer extends FlutterAliyunSpeechReco
 
 
   @override
-  Future<void> start() async {
-    await methodChannel.invokeMethod<void>('start');
+  Future<void> start(String token) async {
+    await methodChannel.invokeMethod<void>('start', {'token': token});
   }
 
   @override
